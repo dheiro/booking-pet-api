@@ -41,22 +41,30 @@ app.get('/', (req, res) => {
 app.post('/register', async (req, res) => {
   const username = req.body.username;
   const password = req.body.password;
-  const hash = await hashPassword(password);
-  knex('users')
-    .insert({
-      username: username,
-      password: hash
-    })
-    .then(data => {
-      res.json({
-        id: data[0],
-        username: username,
-        password: hash
-      });
-    })
-    .catch(err => {
-      console.log(err);
-    });
+
+  const checkUser = await checkUsername(username);
+
+  if (checkUser) {
+    res.status(400).send('username already exists');
+  } else {
+    res.send('ok');
+  }
+  // const hash = await hashPassword(password);
+  // knex('users')
+  //   .insert({
+  //     username: username,
+  //     password: hash
+  //   })
+  //   .then(data => {
+  //     res.json({
+  //       id: data[0],
+  //       username: username,
+  //       password: hash
+  //     });
+  //   })
+  //   .catch(err => {
+  //     console.log(err);
+  //   });
 });
 
 app.post('/login', (req, res) => {
@@ -154,6 +162,23 @@ app.get('/orders', passport.authenticate('jwt', { session: false }), async (req,
   }
 });
 
+app.get('/orders/:id', async (req, res) => {
+  const id = req.params.id;
+  try {
+    const order =  await knex('orders')
+                            .where('id', id)
+                            .first();
+    
+    const services = await orderService(id);
+    res.status(200).json({
+      ...order,
+      services: services
+    });
+  } catch (e) {
+    console.log(e);
+  }
+});
+
 function totalPrice(orderId) {
   return new Promise(resolve => {
     knex('order_service')
@@ -234,5 +259,24 @@ const comparePassword = (plain, hash) => {
       .catch(err => {
         reject(err);
       });
+  });
+};
+
+const checkUsername = username => {
+  return new Promise((resolve, reject) => {
+    knex('users')
+      .select('username')
+      .where('username', username)
+      .first()
+      .then(user => {
+        if (user) {
+          resolve(true);
+        } else {
+          resolve(false);
+        }
+      })
+      .catch(err => {
+        reject(err);
+      })
   });
 };
