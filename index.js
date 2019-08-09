@@ -7,10 +7,10 @@ const passport = require('passport');
 const knex = require('knex')({
   client: 'mysql2',
   connection: {
-    host : 'dheiro.com',
-    user : 'dheiro_project_x',
-    password : 'kadalijo',
-    database : 'dheiro_project_x'
+    host : '',
+    user : '',
+    password : '',
+    database : ''
   }
 });
 
